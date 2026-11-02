@@ -1,0 +1,58 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - Cloud Cost Metrics - Validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should fail when an instance has no name
+    set:
+      testing: {enabled: true}
+      instances:
+        - service:
+            port: 8080
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The cloudCostMetrics instance at position 1 has no name.
+            Every instance needs a name, which is used as the metrics' instance label:
+            cloudCostMetrics:
+              instances:
+                - name: my-aws-account
+
+  - it: should fail when two instances resolve to the same name
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: my-account
+        - name: my account
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            More than one cloudCostMetrics instance resolves to the name "my_account".
+            Instance names must be unique, and are compared with "-", " ", and "_" treated as equal.
+
+  - it: should fail when an explicit address is not host:port
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: external
+          address: not-a-valid-address
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The cloudCostMetrics instance "external" has an address "not-a-valid-address" that is not in host:port form.
+            Set the address as host and port, for example:
+            cloudCostMetrics:
+              instances:
+                - name: external
+                  address: cloudcost-exporter.monitoring.svc:8080
+
+  - it: should pass for a valid set of instances
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+        - name: staging
+          address: cloudcost.example.com:9090
+    asserts:
+      - isKind:
+          of: ConfigMap

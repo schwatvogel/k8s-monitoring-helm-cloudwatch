@@ -1,0 +1,170 @@
+should add extra labels and metric tuning:
+  1: |
+    |-
+      declare "cloudcost_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.scrape "production" {
+          targets = [{
+            __address__ = "RELEASE-NAME-cloudcost-exporter.NAMESPACE.svc:8080",
+            __metrics_path__ = "/metrics",
+          }]
+          job_name = "integrations/cloudcost-exporter"
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudcost-exporter"
+          }
+          rule {
+            target_label = "team"
+            replacement = "platform"
+          }
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|cloudcost_.*"
+            action = "keep"
+          }
+          rule {
+            source_labels = ["__name__"]
+            regex = "go_.*"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+      } // declare "cloudcost_metrics"
+should create a ConfigMap with no scrapes when no instances are set:
+  1: |
+    |-
+      declare "cloudcost_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+      } // declare "cloudcost_metrics"
+should create a separate scrape for each instance:
+  1: |
+    |-
+      declare "cloudcost_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.scrape "production" {
+          targets = [{
+            __address__ = "RELEASE-NAME-cloudcost-exporter.NAMESPACE.svc:8080",
+            __metrics_path__ = "/metrics",
+          }]
+          job_name = "integrations/cloudcost-exporter"
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudcost-exporter"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+
+        prometheus.scrape "staging" {
+          targets = [{
+            __address__ = "RELEASE-NAME-cloudcost-exporter.NAMESPACE.svc:8080",
+            __metrics_path__ = "/metrics",
+          }]
+          job_name = "integrations/cloudcost-exporter-staging"
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.staging.receiver]
+        } // prometheus.scrape "staging"
+
+        prometheus.relabel "staging" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "staging"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudcost-exporter-staging"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "staging"
+      } // declare "cloudcost_metrics"
+should scrape the deployed exporter Service for a single instance:
+  1: |
+    |-
+      declare "cloudcost_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.scrape "production" {
+          targets = [{
+            __address__ = "RELEASE-NAME-cloudcost-exporter.NAMESPACE.svc:8080",
+            __metrics_path__ = "/metrics",
+          }]
+          job_name = "integrations/cloudcost-exporter"
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudcost-exporter"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+      } // declare "cloudcost_metrics"

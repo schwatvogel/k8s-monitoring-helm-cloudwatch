@@ -3,6 +3,7 @@
 - applicationObservability
 - autoInstrumentation
 - cloudwatchMetrics
+- cloudCostMetrics
 - clusterMetrics
 - clusterEvents
 - costMetrics

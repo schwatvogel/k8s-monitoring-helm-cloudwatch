@@ -1,0 +1,111 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Cloud Cost Metrics - Default values
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should create a ConfigMap with no scrapes when no instances are set
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should scrape the deployed exporter Service for a single instance
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "production"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '__address__ = "RELEASE-NAME-cloudcost-exporter\.NAMESPACE\.svc:8080"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '__metrics_path__ = "/metrics"'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should create a separate scrape for each instance
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+        - name: staging
+          jobLabel: integrations/cloudcost-exporter-staging
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "production"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "staging"'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should turn an instance name into a usable Alloy component name
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: Prod EU-West
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "prod_eu_west"'
+      # The component name is normalized, but the instance label keeps the name as given.
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'replacement = "Prod EU-West"'
+
+  - it: should use an explicit address when set
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: external
+          address: cloudcost.example.com:9090
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '__address__ = "cloudcost.example.com:9090"'
+
+  - it: should target a custom Service name and namespace
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          service:
+            name: my-exporter
+            namespace: monitoring
+            port: 9000
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '__address__ = "my-exporter\.monitoring\.svc:9000"'
+
+  - it: should add extra labels and metric tuning
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          labels:
+            team: platform
+          metrics:
+            tuning:
+              includeMetrics: [cloudcost_.*]
+              excludeMetrics: [go_.*]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'target_label = "team"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'regex = "up\|scrape_samples_scraped\|cloudcost_\.\*"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'regex = "go_\.\*"'
+      - matchSnapshot:
+          path: data["module.alloy"]

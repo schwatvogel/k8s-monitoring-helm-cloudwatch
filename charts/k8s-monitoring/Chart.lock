@@ -11,6 +11,9 @@ dependencies:
 - name: feature-cloudwatch-metrics
   repository: ""
   version: 1.0.0
+- name: feature-cloudcost-metrics
+  repository: ""
+  version: 1.0.0
 - name: feature-cluster-events
   repository: ""
   version: 1.0.0

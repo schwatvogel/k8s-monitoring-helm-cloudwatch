@@ -113,6 +113,7 @@ charts/feature-{name}/
 -   `feature-annotation-autodiscovery` - Gathers metrics automatically based on Kubernetes Pod and Service annotations
 -   `feature-application-observability` - Gathers application data
 -   `feature-auto-instrumentation` - Gathers telemetry data via automatic instrumentation
+-   `feature-cloudcost-metrics` - Gathers cloud cost rate metrics from Cloud Cost Exporter
 -   `feature-cloudwatch-metrics` - Gathers AWS CloudWatch metrics
 -   `feature-cluster-events` - Gathers Kubernetes Events
 -   `feature-cluster-metrics` - Gathers Kubernetes Cluster metrics

@@ -1,0 +1,56 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Telemetry Service - Cloud Cost Exporter
+templates:
+  - charts/cloudcost-exporter/templates/deployment.yaml
+  - charts/cloudcost-exporter/templates/service.yaml
+  - charts/cloudcost-exporter/templates/serviceaccount.yaml
+tests:
+  - it: should render the Deployment with the configured container args
+    template: charts/cloudcost-exporter/templates/deployment.yaml
+    set:
+      cloudcost-exporter:
+        deploy: true
+        containerArgs:
+          - --provider=aws
+          - --aws.region=us-east-1
+          - --aws.services=EC2,S3
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --provider=aws
+            - --aws.region=us-east-1
+            - --aws.services=EC2,S3
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+
+  - it: should render the Service on port 8080
+    template: charts/cloudcost-exporter/templates/service.yaml
+    set:
+      cloudcost-exporter:
+        deploy: true
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+
+  - it: should pass the IRSA role annotation through to the ServiceAccount
+    template: charts/cloudcost-exporter/templates/serviceaccount.yaml
+    set:
+      cloudcost-exporter:
+        deploy: true
+        serviceAccount:
+          create: true
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/CloudCostExporterRole
+    asserts:
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.annotations["eks.amazonaws.com/role-arn"]
+          value: arn:aws:iam::123456789012:role/CloudCostExporterRole

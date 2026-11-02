@@ -1,0 +1,74 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
+
+# Feature: Cloud Cost Metrics
+
+{{ template "chart.deprecationWarning" . }}
+
+The Cloud Cost Metrics feature scrapes cost rate metrics from one or more
+[Cloud Cost Exporter](https://github.com/grafana/cloudcost-exporter) instances and delivers them to your metrics
+destinations alongside the rest of your Kubernetes telemetry.
+
+## Usage
+
+```yaml
+cloudCostMetrics:
+  enabled: true
+  instances:
+    - name: production
+```
+
+With no further settings, an instance scrapes the Cloud Cost Exporter deployed by
+`telemetryServices.cloudcost-exporter`. Each entry in `instances` becomes its own scrape, so use separate instances to
+gather from several exporters — for example one exporter per AWS account, since the exporter assumes a single role per
+process. See the [instance settings](./docs/instance.md) for everything available on an entry.
+
+## How it works
+
+For every instance, this feature generates a `prometheus.scrape` that gathers from the Cloud Cost Exporter, and a
+`prometheus.relabel` that sets the `instance` and `job` labels and applies any metric tuning.
+
+By default the scrape targets the in-cluster Cloud Cost Exporter Service. To scrape an exporter this chart does not
+deploy, set `address` on the instance.
+
+### Deploying the exporter
+
+The Cloud Cost Exporter workload is deployed by the telemetry service, not this feature:
+
+```yaml
+telemetryServices:
+  cloudcost-exporter:
+    deploy: true
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/CloudCostExporterRole
+```
+
+The exporter authenticates with AWS using the credentials available to its Pod, which is the normal setup with
+[IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) or
+[EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html). To gather costs from another
+AWS account, add `--aws.roleARN=<role-arn>` to its `containerArgs` and deploy one exporter per account.
+
+## Testing
+
+This chart contains unit tests to verify the generated configuration. The hidden value `testing.enabled` will render
+the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can
+use it to show the outcome of a given values file.
+
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the
+tests, use `helm test`.
+
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
+
+<!-- textlint-disable terminology -->
+{{ template "chart.maintainersSection" . }}
+<!-- textlint-enable terminology -->
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
+{{ template "chart.sourcesSection" . }}
+<!-- markdownlint-enable list-marker-space -->
+<!-- markdownlint-enable no-bare-urls -->
+{{ template "chart.requirementsSection" . }}
+{{ template "chart.valuesSection" . }}

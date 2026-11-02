@@ -23,5 +23,8 @@ dependencies:
 - name: k8s-injection-controller
   repository: https://grafana.github.io/helm-charts
   version: 0.2.1
+- name: cloudcost-exporter
+  repository: https://grafana.github.io/helm-charts
+  version: 1.1.13
 digest: sha256:8f4092ae526167ee5beb8767a0d55031a3c5a264678ae868a5ea746df545626a
 generated: "2026-09-08T10:58:42.664461-05:00"

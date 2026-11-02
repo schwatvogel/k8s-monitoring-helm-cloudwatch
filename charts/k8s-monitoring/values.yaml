@@ -225,6 +225,32 @@ cloudwatchMetrics:
 
   # To see additional options, please see the [CloudWatch Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cloudwatch-metrics).
 
+# -- Cloud Cost Metrics scrapes cost rate metrics from one or more Cloud Cost Exporter instances.
+# Requires a destination that supports metrics.
+# To see the valid options, please see the [Cloud Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cloudcost-metrics).
+# @default -- Disabled
+# @section -- Features - Cloud Cost Metrics
+cloudCostMetrics:
+  # -- Enable scraping Cloud Cost Exporter metrics.
+  # @section -- Features - Cloud Cost Metrics
+  enabled: false
+
+  # -- The destinations where Cloud Cost metrics will be sent. If empty, all metrics-capable destinations will be used.
+  # @section -- Features - Cloud Cost Metrics
+  destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Cloud Cost Metrics
+  dataProcessors: []
+
+  # -- Which collector to assign this feature to.
+  # @section -- Features - Cloud Cost Metrics
+  # @ignored
+  collector: "alloy-metrics"
+
+  # To see additional options, please see the [Cloud Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cloudcost-metrics).
+
 # -- Cluster events.
 # Requires a destination that supports logs.
 # To see the valid options, please see the [Cluster Events feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events).

@@ -1,0 +1,38 @@
+---
+cluster:
+  name: cloudcost-metrics-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+# Deploy a Cloud Cost Exporter for the cluster's own AWS account, authenticated via IRSA.
+telemetryServices:
+  cloudcost-exporter:
+    deploy: true
+    containerArgs:
+      - --provider=aws
+      - --aws.region=us-east-1
+      - --aws.services=EC2,S3,RDS,ELB,NATGATEWAY,VPC
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::111111111111:role/CloudCostExporterRole
+
+cloudCostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  instances:
+    # Scrapes the Cloud Cost Exporter deployed above for this cluster's AWS account.
+    - name: local-account
+
+    # Scrapes a second Cloud Cost Exporter, deployed separately for another AWS account (the exporter assumes a single
+    # role per process, so each account needs its own exporter). Point at it with an explicit address.
+    - name: audit-account
+      address: cloudcost-exporter-audit.monitoring.svc:8080
+      labels:
+        account: audit
+
+collectors:
+  alloy-metrics:
+    presets: [clustered]

@@ -1,0 +1,12 @@
+# Cloud Cost Metrics from several AWS accounts
+
+This example gathers cloud cost rate metrics from more than one AWS account using the
+[Cloud Cost Exporter](https://github.com/grafana/cloudcost-exporter).
+
+The Cloud Cost Exporter assumes a single role per process, so each AWS account needs its own exporter. The chart
+deploys one exporter for the cluster's own account via `telemetryServices.cloudcost-exporter`, authenticated with IRSA.
+A second exporter for another account is deployed separately, and the feature scrapes it by setting an explicit
+`address` on a second instance.
+
+Each instance becomes its own scrape with a distinct `instance` label, and the `audit-account` instance adds a static
+`account` label so its series can be told apart downstream.

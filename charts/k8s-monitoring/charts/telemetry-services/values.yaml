@@ -295,3 +295,44 @@ sdkInjector:
   # Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running.
   # @section -- SDK Injector
   allowedConfigMapWriters: ""
+
+# Cloud Cost Exporter gathers near real-time cost rate metrics for cloud resources (AWS, GCP, Azure).
+# These values are passed through to the cloudcost-exporter subchart, except for `deploy`, which toggles
+# whether this chart deploys it at all.
+# To see all valid settings, run `helm show values grafana/cloudcost-exporter`.
+# @default -- Disabled
+# @section -- Cloud Cost Exporter
+cloudcost-exporter:
+  # -- Deploy Cloud Cost Exporter. Set to false to scrape an existing Cloud Cost Exporter deployment instead.
+  # @section -- Cloud Cost Exporter
+  deploy: false
+
+  # -- Container arguments used to select the cloud provider and services to gather cost rates for.
+  # AWS services: `EC2`, `S3`, `RDS`, `MSK`, `ELB`, `NATGATEWAY`, `VPC`, `BEDROCK`. For GCP or Azure, change
+  # `--provider` and the provider-specific flags accordingly. To gather costs from another AWS account, add
+  # `--aws.roleARN=<role-arn>` (the exporter assumes a single role per process, so use one deployment per account).
+  # @section -- Cloud Cost Exporter
+  containerArgs:
+    - --provider=aws
+    - --aws.region=us-east-1
+    - --aws.services=EC2,S3,RDS,ELB,NATGATEWAY,VPC
+
+  # -- ServiceAccount settings for the exporter. Annotate the ServiceAccount with the IAM role ARN to use
+  # IRSA / EKS Pod Identity, which is the recommended way to authenticate the exporter with AWS.
+  # @section -- Cloud Cost Exporter
+  serviceAccount:
+    create: true
+    annotations: {}
+    #  eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/CloudCostExporterRole
+
+  # @ignored -- The Cloud Cost Exporter service. The feature scrapes this port.
+  service:
+    port: 8080
+
+  # @ignored -- Alloy owns scraping via the cloudCostMetrics feature, so disable the scrape annotation.
+  podAnnotations:
+    prometheus.io/scrape: "false"
+
+  # @ignored -- Run on Linux nodes only.
+  nodeSelector:
+    kubernetes.io/os: linux

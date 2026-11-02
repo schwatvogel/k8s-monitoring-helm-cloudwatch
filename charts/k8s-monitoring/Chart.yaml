@@ -36,6 +36,11 @@ dependencies:
     repository: ""
     version: 1.0.0
     condition: cloudwatchMetrics.enabled
+  - alias: cloudCostMetrics
+    name: feature-cloudcost-metrics
+    repository: ""
+    version: 1.0.0
+    condition: cloudCostMetrics.enabled
   - alias: clusterEvents
     name: feature-cluster-events
     repository: ""

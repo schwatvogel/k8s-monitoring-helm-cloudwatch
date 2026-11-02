@@ -1,0 +1,132 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Cloud Cost Metrics
+templates:
+  - alloy-config.yaml
+  - validations.yaml
+tests:
+  - it: requires a metrics destination
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      cloudCostMetrics:
+        enabled: true
+        instances:
+          - name: production
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            No destinations found that can accept metrics from the Cloud Cost metrics feature.
+            Please add a destination with metrics support.
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
+
+  - it: requires a collector
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.svc:9090/api/v1/write
+      cloudCostMetrics:
+        enabled: true
+        instances:
+          - name: production
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            At least one collector should be enabled
+            Please enable one by setting:
+            collectors:
+              <collector-name>:
+                <collector-settings>
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
+  - it: fails when the assigned collector runs multiple instances without clustering
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.svc:9090/api/v1/write
+      cloudCostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        instances:
+          - name: production
+      collectors:
+        alloy-metrics:
+          controller: {type: deployment, replicas: 3}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Cloud Cost metrics feature is assigned to the alloy-metrics collector, which runs more than one Alloy instance without clustering.
+            Every instance would scrape the same Cloud Cost Exporter, producing duplicate samples.
+            Please run the collector as a single instance:
+            collectors:
+              alloy-metrics:
+                presets: [singleton]
+            Or, to keep scaling out, enable clustering so the scrapes are shared between instances:
+              alloy-metrics:
+                presets: [clustered]
+
+  - it: renders the config to scrape the Cloud Cost Exporter
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.svc:9090/api/v1/write
+      cloudCostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        instances:
+          - name: production
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'declare "cloudcost_metrics"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '__address__ = "RELEASE-NAME-cloudcost-exporter\.'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'cloudcost_metrics "feature"'
+
+  - it: scrapes an external exporter by explicit address
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.svc:9090/api/v1/write
+      cloudCostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        instances:
+          - name: account-a
+            address: cloudcost-a.monitoring.svc:8080
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '__address__ = "cloudcost-a.monitoring.svc:8080"'

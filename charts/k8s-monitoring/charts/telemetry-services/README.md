@@ -37,6 +37,7 @@ telemetryServices:
 | Repository | Name | Version |
 |------------|------|---------|
 | https://grafana.github.io/helm-charts | beyla | 1.16.11 |
+| https://grafana.github.io/helm-charts | cloudcost-exporter | 1.1.13 |
 | https://grafana.github.io/helm-charts | sdkInjector(k8s-injection-controller) | 0.2.1 |
 | https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.5 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 8.4.2 |
@@ -54,6 +55,14 @@ telemetryServices:
 | beyla.deploy | bool | `false` | Deploy Grafana Beyla's services. This controls *all* systems from the Grafana Beyla Helm chart: Beyla itself, and the Beyla Kubernetes metadata cache. |
 | beyla.enabled | bool | `false` | Enable Grafana Beyla. This should remain off until we remove Beyla from the autoInstrumentation feature. |
 | beyla.k8sCache | object | `{"replicas":0}` | Options for the Grafana Beyla Kubernetes metadata cache. |
+
+### Cloud Cost Exporter
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| cloudcost-exporter.containerArgs | list | `["--provider=aws","--aws.region=us-east-1","--aws.services=EC2,S3,RDS,ELB,NATGATEWAY,VPC"]` | Container arguments used to select the cloud provider and services to gather cost rates for. AWS services: `EC2`, `S3`, `RDS`, `MSK`, `ELB`, `NATGATEWAY`, `VPC`, `BEDROCK`. For GCP or Azure, change `--provider` and the provider-specific flags accordingly. To gather costs from another AWS account, add `--aws.roleARN=<role-arn>` (the exporter assumes a single role per process, so use one deployment per account). |
+| cloudcost-exporter.deploy | bool | `false` | Deploy Cloud Cost Exporter. Set to false to scrape an existing Cloud Cost Exporter deployment instead. |
+| cloudcost-exporter.serviceAccount | object | `{"annotations":{},"create":true}` | ServiceAccount settings for the exporter. Annotate the ServiceAccount with the IAM role ARN to use IRSA / EKS Pod Identity, which is the recommended way to authenticate the exporter with AWS. |
 
 ### Global Settings
 

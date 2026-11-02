@@ -192,6 +192,23 @@
                 }
             }
         },
+        "cloudCostMetrics": {
+            "type": "object",
+            "properties": {
+                "collector": {
+                    "type": "string"
+                },
+                "dataProcessors": {
+                    "type": "array"
+                },
+                "destinations": {
+                    "type": "array"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
         "cloudwatchMetrics": {
             "type": "object",
             "properties": {

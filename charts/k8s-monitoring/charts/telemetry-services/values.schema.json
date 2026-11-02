@@ -35,6 +35,55 @@
                 }
             }
         },
+        "cloudcost-exporter": {
+            "type": "object",
+            "properties": {
+                "containerArgs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "deploy": {
+                    "type": "boolean"
+                },
+                "nodeSelector": {
+                    "type": "object",
+                    "properties": {
+                        "kubernetes.io/os": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "podAnnotations": {
+                    "type": "object",
+                    "properties": {
+                        "prometheus.io/scrape": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "port": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "type": "object"
+                        },
+                        "create": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
         "global": {
             "type": "object",
             "properties": {

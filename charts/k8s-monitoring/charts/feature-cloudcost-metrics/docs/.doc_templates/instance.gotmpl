@@ -1,0 +1,42 @@
+# Cloud Cost Exporter Instance Settings
+
+These are the settings available on each entry in `cloudCostMetrics.instances`. Every instance becomes its own
+`prometheus.scrape` and `prometheus.relabel`, scraping one
+[Cloud Cost Exporter](https://github.com/grafana/cloudcost-exporter) and forwarding its metrics to the feature's
+destinations.
+
+## Target
+
+By default an instance scrapes the in-cluster Cloud Cost Exporter Service deployed by
+`telemetryServices.cloudcost-exporter`, which resolves to `<release>-cloudcost-exporter` in the release namespace.
+
+To scrape a different Service — for example one deployed under another name or namespace — set the `service` fields.
+To scrape a Cloud Cost Exporter this chart does not deploy at all, set `address` to its `host:port`, which takes
+precedence over `service`:
+
+```yaml
+instances:
+  - name: external
+    address: cloudcost-exporter.monitoring.svc:8080
+```
+
+## Multiple accounts
+
+The Cloud Cost Exporter assumes a single role per process, so to gather costs from several AWS accounts, deploy one
+exporter per account (each with its own `--aws.roleARN`) and add one instance per exporter:
+
+```yaml
+instances:
+  - name: account-a
+    address: cloudcost-a.monitoring.svc:8080
+  - name: account-b
+    address: cloudcost-b.monitoring.svc:8080
+```
+
+## Metric processing
+
+`metrics.tuning.includeMetrics` and `metrics.tuning.excludeMetrics` filter which series are kept, and
+`metrics.extraMetricProcessingRules` adds raw `prometheus.relabel` rule blocks. `labels` adds static labels to every
+metric from the instance.
+
+{{ template "chart.valuesSection" . }}

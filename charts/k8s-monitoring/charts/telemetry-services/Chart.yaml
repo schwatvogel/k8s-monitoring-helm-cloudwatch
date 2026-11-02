@@ -49,3 +49,7 @@ dependencies:
     version: 0.2.1
     repository: https://grafana.github.io/helm-charts
     condition: sdkInjector.deploy
+  - name: cloudcost-exporter
+    version: 1.1.13
+    repository: https://grafana.github.io/helm-charts
+    condition: cloudcost-exporter.deploy
